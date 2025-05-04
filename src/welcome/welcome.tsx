@@ -1,4 +1,4 @@
-import { GoogleMap, useJsApiLoader, StandaloneSearchBox, MarkerF } from '@react-google-maps/api'
+import { DirectionsRenderer, GoogleMap, useJsApiLoader, StandaloneSearchBox, MarkerF } from '@react-google-maps/api'
 import { useRef, useState, useCallback, useEffect  } from "react";
 
 export function Welcome() {
@@ -23,6 +23,7 @@ export function Welcome() {
   const [origin_id, setOrigin_id] = useState(null);
   const [distance, setDistance] = useState(0);
   const [time, setTime] = useState(0);
+  const [directions, setDirections] = useState(null);
   const apiKey = import.meta.env.VITE_GOOGLEMAPS_API_KEY;
   const backEnd = import.meta.env.VITE_BACKEND;
 
@@ -33,6 +34,32 @@ export function Welcome() {
   })
 
   console.log("isLoaded: " + isLoaded);
+
+  const getDraw = () => {
+    console.log("getDraw");
+    
+    if(_markers.length == 2 && directions == null){ 
+      const directionsService = new google.maps.DirectionsService();
+      directionsService.route(
+        {
+          origin: markerOrigin.position,
+          destination: markerDestination.position,
+          travelMode: google.maps.TravelMode.DRIVING
+        },
+        (result, status) => {
+
+          console.log("result");
+          console.log(result);
+          
+          if (status === google.maps.DirectionsStatus.OK) {
+            setDirections(result);
+          } else {
+            console.error(`error fetching directions ${result}`);
+          }
+        }
+      );
+    }
+  }
 
   const getDirections = () => {
     console.log("getDirections");
@@ -53,12 +80,17 @@ export function Welcome() {
           setDistance(data.distance);
           setTime(data.duration);
         });
+      
+      
+
     }
   }
 
   useEffect(() => {
     console.log(`useEffect`);
     getDirections();
+
+    getDraw();
   });
 
   const handleOnPlacesChangedOrigin = () => {
@@ -86,6 +118,7 @@ export function Welcome() {
       console.log(jOrigin);
 
       setMarkerOrigin(jOrigin);
+      setDirections(null);
     }
   }
 
@@ -108,6 +141,7 @@ export function Welcome() {
       }
 
       setMarkerDestination(jDestination);
+      setDirections(null);
     }
   }
 
@@ -199,8 +233,19 @@ export function Welcome() {
                   onLoad={onLoad}
                   onUnmount={onUnmount}
                 >
-                  {
-                  
+
+                {
+                  directions !== null && (
+                    <DirectionsRenderer
+                      directions={directions}
+                      defaultOptions={{
+                        suppressMarkers: true
+                      }}
+                    />
+                  )
+                }
+
+                  {                  
                   /* Child components, such as markers, info windows, etc. */
                   // Coloca AdvancedMarkers en el mapa
                   _markers.map((marker) => (
