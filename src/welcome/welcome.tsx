@@ -1,6 +1,14 @@
 import { DirectionsRenderer, GoogleMap, useJsApiLoader, StandaloneSearchBox, MarkerF } from '@react-google-maps/api'
 import { useRef, useState, useCallback, useEffect  } from "react";
 
+interface Trip {
+  distance: string;
+  duration: string;
+  price: number;
+  origin: string;
+  destination: string;
+}
+
 export function Welcome() {
   function quote(){
     console.log("quote");
@@ -23,6 +31,8 @@ export function Welcome() {
   const [origin_id, setOrigin_id] = useState(null);
   const [distance, setDistance] = useState(0);
   const [time, setTime] = useState(0);
+  const [price, setPrice] = useState(0);
+  const [breakdown, setBreakdown] = useState<Trip[]>([]);
   const [directions, setDirections] = useState(null);
   const apiKey = import.meta.env.VITE_GOOGLEMAPS_API_KEY;
   const backEnd = import.meta.env.VITE_BACKEND;
@@ -66,8 +76,8 @@ export function Welcome() {
 
     console.table(_markers);
     if(_markers.length == 2){
-      
-      fetch(backEnd+'/api/getDirections2', {
+      //fetch(backEnd+'/api/getDirections', {
+      fetch(backEnd, {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -77,21 +87,58 @@ export function Welcome() {
       })
         .then(res => res.json())
         .then(data => { 
+          console.log(data);
           setDistance(data.distance);
           setTime(data.duration);
-        });
-      
-      
+          setPrice(numberToCurrency(data.price));
 
+
+          setBreakdown(data.breakdown || []);
+          if(data.distance_miles){
+            setDistance(data.distance_miles + " millas");
+          }
+          if(data.duration_seconds){
+            setTime(secondsToDHM(data.duration_seconds));
+          }
+        });
     }
   }
 
-  useEffect(() => {
-    console.log(`useEffect`);
-    getDirections();
+  const numberToCurrency = (number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number);
+  }
 
-    getDraw();
-  });
+  function secondsToDHM(seconds) {
+    seconds = Number(seconds);
+
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+
+    let result = "";
+    if(d) result += d + " días ";
+    if(h) result += h + " horas ";
+    if(m) result += m + " minutos ";
+
+    return result;
+  }
+
+
+  
+  var _markers = [];
+  useEffect(() => {
+     if (markerOrigin && markerDestination) {
+      console.log(`useEffect`);
+      getDirections();
+
+      getDraw();
+    }
+  }, [markerOrigin, markerDestination]);
 
   const handleOnPlacesChangedOrigin = () => {
     console.log("handleOnPlacesChangedOrigin");
@@ -155,7 +202,6 @@ export function Welcome() {
     lng: -101.285
   }
   
-  var _markers = [];
   if(markerOrigin)
     _markers.push(markerOrigin);
   if(markerDestination)
@@ -178,13 +224,13 @@ export function Welcome() {
   return (
     <main>
         <div className="topFixed">
-            <div className="header flex">
+            <div className="header">
 
                 <div className="divLogo">
               
                     <span className="name logo"></span>
                 </div>
-                <span className="link" onClick={refresh}>Reservar</span>
+                <span className="link hide" onClick={refresh}>Reservar</span>
             </div> 
         </div>
         
@@ -211,8 +257,39 @@ export function Welcome() {
                 </div>
 
                 <div className='lblResult'>
+                    Tiempo: {time} <br />
                     Distancia: {distance} <br />
-                    Tiempo: {time}
+                    Precio: {price} <br />
+
+                  {breakdown.length > 0 &&
+                    <div>
+                      <br />
+                      Detalles del viaje: <br />
+                      {
+                        breakdown.map((b) => (
+                          <div>
+                            Origen: {b.origin} <br />
+                            Destino: {b.destination} <br />
+                            Tiempo: {b.duration} <br />
+                            Distancia: {b.distance} <br />
+                            {b.pricePerMile > 0 &&
+                              <div>
+                                Precio por milla: ${b.pricePerMile || 0} <br />
+                                Precio: {b.distance} * ${b.pricePerMile || 0} = {numberToCurrency(b.distance.match(/\d+(\.\d+)?/)[0] * b.pricePerMile)}  <br />
+                              </div>
+                            }
+                            {b.price > 0 &&
+                              <div>
+                                Precio: {numberToCurrency(b.price)}  <br />
+                              </div>
+                            }
+                            
+                            <br />
+                          </div>
+                        ))
+                      }
+                    </div>
+                  }
                   </div>
 
                 <div className="dates">

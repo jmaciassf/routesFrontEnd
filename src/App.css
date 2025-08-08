@@ -59,7 +59,12 @@ body {
  margin-top: 16px;
  margin-right: 20px;
  }
-.header {background-color: white; height: 80px; padding: 5px 10px;font-size: 13px;color: black;/* position: fixed; *//* width: 100%; */}
+.header {background-color: white;
+    padding: 12px 0;font-size: 13px;color: black;/* position: fixed; *//* width: 100%; */
+    text-align: center;
+    width: 100%;
+    display: block;
+}
 .flex {display: flex;}
 .flex1 { flex: 1; }
 .flex2 { flex: 2; }
@@ -68,8 +73,13 @@ body {
 
 
 .section1 .flex3 { display: none; }
-.header .name, .divMenu .logo {font-weight: 600;margin: 0;cursor: initial;background: url(/logo.png);width: 123px;
-    height: 70px;background-size: contain;background-repeat: no-repeat;/* margin-top: 10px; */display: inline-block;/* float: left; */position: absolute;/* background-position: bottom; */}
+.header .name, .divMenu .logo {font-weight: 600;margin: 0;cursor: initial;
+    background: url(/logo.png);width: 123px;
+    height: 50px;background-size: contain;background-repeat: no-repeat;/* margin-top: 10px; */
+    display: inline-block;/* float: left; */position: absolute;/* background-position: bottom; */
+    position: initial;
+    width: 190px;
+}
 .header span {
     margin: 0px 10px;
     /* line-height: 70px; */
@@ -573,7 +583,7 @@ body > .footer p {}
 }
 
 .section1 {
-    padding: 128px 0px 50px 0;
+    padding: 30px 0px 50px 0;
     background-color: #2D3748;
     /* background-repeat: no-repeat; */
     /* background-size: cover; */
@@ -645,9 +655,10 @@ body > .footer p {}
     position: fixed;
     width: 100%;
     z-index: 3;
+    position: initial;
 }
 .divLogo {
-    width: 120px;
+    /*width: 120px;*/
     /* margin-right: 35px; */
     /* flex: 1; */
 }
@@ -793,7 +804,7 @@ body > .footer p {}
     }
 
     #divResult {text-align: center;padding-top: 24px;}
-    .section1 {padding: 120px 20px 40px 20px;}
+    .section1 {padding: 30px 20px 40px 20px;}
 }
 
 @media (max-width: 1023px) {
@@ -904,7 +915,7 @@ body > .footer p {}
     .noWarning .section1 {
     padding-top: 45px;
 }
-    .section1 {padding: 120px 20px 40px 20px;}
+    .section1 {padding: 30px 20px 40px 20px;}
     .section1 .line1 { display: block; }
     .section1 .left {margin-top: 40px;}
     .section1 .title {text-align: center;margin-bottom: 10px;}
