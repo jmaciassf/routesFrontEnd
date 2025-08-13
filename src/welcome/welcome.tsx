@@ -28,7 +28,7 @@ export function Welcome() {
   const refOrigin = useRef(null);
   const refDestination = useRef(null);
   const [map, setMap] = useState(null);
-  const [origin_id, setOrigin_id] = useState(null);
+  //const [origin_id, setOrigin_id] = useState(null);
   const [distance, setDistance] = useState(0);
   const [time, setTime] = useState(0);
   const [price, setPrice] = useState(0);
@@ -45,17 +45,42 @@ export function Welcome() {
 
   console.log("isLoaded: " + isLoaded);
 
+  // Obtiene la ruta del mapa del origen A al destino B
   const getDraw = () => {
     console.log("getDraw");
     
     if(_markers.length == 2 && directions == null){ 
+
+      if(!markerDestination || !markerDestination)
+        return;
+
+      // Hacer que pase por el puente de laredo
+      let useLaredoBridge = false;
+      if(isMonterrey(markerOrigin.text)){
+        if(isTexas(markerDestination) || isArizona(markerDestination.text) || isCalifornia(markerDestination) || isWashington(markerDestination)){
+          useLaredoBridge = true;
+        }
+      }
+
+      let waypoints = []
+      if(useLaredoBridge){
+        let jBridge_laredo = {
+          location: { lat: 27.5004734, lng: -99.5027081 }, // Puente Juarez-Lincoln International Bridge
+          stopover: true
+        }
+        waypoints.push(jBridge_laredo);
+      }
+
+      let jRoute = {
+        origin: markerOrigin.position,
+        destination: markerDestination.position,
+        waypoints: waypoints,
+        travelMode: google.maps.TravelMode.DRIVING
+      }
+
       const directionsService = new google.maps.DirectionsService();
       directionsService.route(
-        {
-          origin: markerOrigin.position,
-          destination: markerDestination.position,
-          travelMode: google.maps.TravelMode.DRIVING
-        },
+        jRoute,
         (result, status) => {
 
           console.log("result");
@@ -71,6 +96,7 @@ export function Welcome() {
     }
   }
 
+  // Obtiene los datos desde el backend/lambda con los valores de tiempo, distancia y precio
   const getDirections = () => {
     console.log("getDirections");
 
@@ -127,8 +153,6 @@ export function Welcome() {
 
     return result;
   }
-
-
   
   var _markers = [];
   useEffect(() => {
@@ -149,8 +173,9 @@ export function Welcome() {
       let a = address[0];
       console.log("Selected: " + a.formatted_address);
       
-      setOrigin_id(a.place_id);
+      //setOrigin_id(a.place_id);
 
+      let jState = getState(address);
       let jOrigin = { 
         id: 1,
         place_id: a.place_id,
@@ -158,7 +183,9 @@ export function Welcome() {
           lat: a.geometry.location.lat(), 
           lng: a.geometry.location.lng()
         },
-        text: a.formatted_address
+        text: a.formatted_address,
+        state: jState.state,
+        country: jState.country
       }
 
       console.log("jOrigin");
@@ -176,6 +203,7 @@ export function Welcome() {
       console.log(address);    
 
       let a = address[0];
+      let jState = getState(address);
 
       let jDestination = { 
         id: 2, 
@@ -184,12 +212,55 @@ export function Welcome() {
           lat: a.geometry.location.lat(), 
           lng: a.geometry.location.lng()
         },
-        text: a.formatted_address
+        text: a.formatted_address,
+        state: jState.state,
+        country: jState.country
       }
 
       setMarkerDestination(jDestination);
       setDirections(null);
     }
+  }
+
+  function getState(address){
+    let address_components = address[0].address_components;
+    let state = "", country = "";
+    address_components.forEach(c => {
+        if (c.types.includes("administrative_area_level_1")) {
+            state = c.short_name;
+        }
+        if (c.types.includes("country")) {
+            country = c.short_name;
+        }
+    });
+
+    return { 
+      state: state, 
+      country: country
+    };
+  }
+  
+  function searchLocations(location, arr) {
+    if (!Array.isArray(arr) || arr.length === 0) return false;
+    return arr.some(element => location.includes(element));
+  }
+  function isArizona(location){
+      return location.includes("Kingman, AZ") || location.includes('Phoenix, AZ') || location.includes('Sahuarita, AZ') || 
+          location.includes('Tucson, AZ') || location.includes('Willcox, AZ')
+  }
+  function isCalifornia(marker){
+    return marker.state == "CA" && marker.country == "US";
+  }
+  function isMonterrey(location){
+      return location.includes("Monterrey") && location.includes("Nuevo Leon")
+  }
+  function isTexas(marker){
+    return marker.state == "TX" && marker.country == "US";
+      let _includes = searchLocations(location, ["Houston, TX", "Austin, TX", " TX 79029", " TX 78852", "TX 78577", "TX 78582", "TX 79360"]);
+      return _includes || location.endsWith(", TX")
+  }
+  function isWashington(marker){
+    return marker.state == "WA" && marker.country == "US";
   }
 
   const containerStyle = {
@@ -266,8 +337,8 @@ export function Welcome() {
                       <br />
                       Detalles del viaje: <br />
                       {
-                        breakdown.map((b) => (
-                          <div>
+                        breakdown.map((b, i) => (
+                          <div key={i}>
                             Origen: {b.origin} <br />
                             Destino: {b.destination} <br />
                             Tiempo: {b.duration} <br />
@@ -290,14 +361,15 @@ export function Welcome() {
                       }
                     </div>
                   }
-                  </div>
+                </div>
 
                 <div className="dates">
 
                 </div>
+                
                 <div id="divResult">
-                    Total: $<span id="lblTotal"></span>
-                    <input type="button" id="btnSchedule" value="Agendar viaje" onClick={schedule} />
+                  Total: $<span id="lblTotal"></span>
+                  <input type="button" id="btnSchedule" value="Agendar viaje" onClick={schedule} />
                 </div>
 
                 <div id="divMap">
