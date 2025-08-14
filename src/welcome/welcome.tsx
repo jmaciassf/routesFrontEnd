@@ -43,7 +43,7 @@ export function Welcome() {
     libraries: ["places"]
   })
 
-  console.log("isLoaded: " + isLoaded);
+  //console.log("isLoaded: " + isLoaded);
 
   // Obtiene la ruta del mapa del origen A al destino B
   const getDraw = () => {
@@ -56,10 +56,10 @@ export function Welcome() {
 
       // Hacer que pase por el puente de laredo
       let useLaredoBridge = false;
-      if(isMonterrey(markerOrigin.text)){
-        if(isTexas(markerDestination) || isArizona(markerDestination.text) || isCalifornia(markerDestination) || isWashington(markerDestination)){
+      if(isMonterrey(markerOrigin.text) && isUSA(markerDestination)){
+        //if(isTexas(markerDestination) || isArizona(markerDestination.text) || isCalifornia(markerDestination) || isWashington(markerDestination)){
           useLaredoBridge = true;
-        }
+        //}
       }
 
       let waypoints = []
@@ -216,6 +216,8 @@ export function Welcome() {
         state: jState.state,
         country: jState.country
       }
+      console.log("jDestination");
+      console.log(jDestination);
 
       setMarkerDestination(jDestination);
       setDirections(null);
@@ -225,19 +227,21 @@ export function Welcome() {
   function getState(address){
     let address_components = address[0].address_components;
     let state = "", country = "";
-    address_components.forEach(c => {
-        if (c.types.includes("administrative_area_level_1")) {
-            state = c.short_name;
-        }
-        if (c.types.includes("country")) {
-            country = c.short_name;
-        }
-    });
+    if(address_components) {
+      address_components.forEach(c => {
+          if (c.types.includes("administrative_area_level_1")) {
+              state = c.short_name;
+          }
+          if (c.types.includes("country")) {
+              country = c.short_name;
+          }
+      });
 
-    return { 
-      state: state, 
-      country: country
-    };
+      return { 
+        state: state, 
+        country: country
+      };
+    }
   }
   
   function searchLocations(location, arr) {
@@ -256,8 +260,9 @@ export function Welcome() {
   }
   function isTexas(marker){
     return marker.state == "TX" && marker.country == "US";
-      let _includes = searchLocations(location, ["Houston, TX", "Austin, TX", " TX 79029", " TX 78852", "TX 78577", "TX 78582", "TX 79360"]);
-      return _includes || location.endsWith(", TX")
+  }
+  function isUSA(marker){
+    return marker.country == "US";
   }
   function isWashington(marker){
     return marker.state == "WA" && marker.country == "US";
