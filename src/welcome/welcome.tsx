@@ -56,7 +56,10 @@ export function Welcome() {
 
       // Hacer que pase por el puente de laredo
       let useLaredoBridge = false;
-      if(isMonterrey(markerOrigin.text) && isUSA(markerDestination)){
+      if( 
+        ((isNL(markerOrigin) || isCDMX(markerOrigin)) && isUSA(markerDestination)) // MX - USA
+        || ( isUSA(markerOrigin) && (isNL(markerDestination) || isCDMX(markerDestination)) ) // USA - MX
+      ){
         //if(isTexas(markerDestination) || isArizona(markerDestination.text) || isCalifornia(markerDestination) || isWashington(markerDestination)){
           useLaredoBridge = true;
         //}
@@ -255,8 +258,17 @@ export function Welcome() {
   function isCalifornia(marker){
     return marker.state == "CA" && marker.country == "US";
   }
-  function isMonterrey(location){
-      return location.includes("Monterrey") && location.includes("Nuevo Leon")
+  function isCDMX(marker){
+      return marker.country == "MX" && marker.state == "CDMX";
+  }
+  function isMonterrey(marker){
+      return marker.country == "MX" && marker.state == "N.L." && 
+      // Incluir area metropolitana
+      ( marker.text.includes("Monterrey") || marker.text.includes("Apodaca") || marker.text.includes("San Nicolás de los Garza")  || marker.text.includes("Guadalupe") 
+      || marker.text.includes("General Escobedo") );
+  }
+  function isNL(marker){
+      return marker.country == "MX" && marker.state == "N.L.";
   }
   function isTexas(marker){
     return marker.state == "TX" && marker.country == "US";
@@ -333,12 +345,14 @@ export function Welcome() {
                 </div>
 
                 <div className='lblResult'>
-                    Tiempo: {time} <br />
-                    Distancia: {distance} <br />
-                    Precio: {price} <br />
+                    <div className='main'>
+                      Tiempo: {time} <br />
+                      Distancia: {distance} <br />
+                      Precio: {price} <br />
+                    </div>                    
 
                   {breakdown.length > 0 &&
-                    <div>
+                    <div className='details'>
                       <br />
                       Detalles del viaje: <br />
                       {

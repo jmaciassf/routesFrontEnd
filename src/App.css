@@ -17,6 +17,8 @@ body {
   width: 100%;
 }
 .lblResult { margin-top: 12px; }
+.lblResult .main { font-size: 18px; }
+.lblResult .details { font-size: 13px; }
 .bgYellow { background-color: var(--yellow-color); }
 .bgWhite { background-color: white; }
 .bgBlue { background-color: #07adbd; }
